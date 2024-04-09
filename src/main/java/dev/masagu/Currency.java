@@ -10,7 +10,7 @@ import java.io.StringReader;
 import java.util.concurrent.StructuredTaskScope;
 import java.util.concurrent.StructuredTaskScope.Subtask;
 
-public record Currency(String from, String to, Double rate, Double amount) {
+public record Currency(String from, String to, Double rate, Double amount) implements TravelComponent {
     public static Currency fromJson(String json, String from) {
         try (JsonParser parser = Json.createParser(new StringReader(json))) {
             parser.next();
