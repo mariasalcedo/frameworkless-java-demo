@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.StructuredTaskScope;
 import java.util.concurrent.StructuredTaskScope.Subtask;
 
-public record Weather(String server, String city, Integer temperature) {
+public record Weather(String server, String city, Integer temperature) implements TravelComponent {
 
     public static class WeatherException extends RuntimeException {
         public WeatherException(Throwable e) {
@@ -33,14 +33,16 @@ public record Weather(String server, String city, Integer temperature) {
     fork multiple objects from the same kind, join them, get a single result.
     Once one of the forked objects return, all others get cancelled, and a single result is returned
      */
-    public static Weather requestMultipleWeather(String city) throws InterruptedException, ExecutionException {
+    public static Weather requestMultipleWeather(String city) throws InterruptedException {
         var coordinates = Geocode.getCoordinates(city);
         try (var scope = new StructuredTaskScope.ShutdownOnSuccess<Weather>()) {
-            Subtask<Weather> subtaskA = scope.fork(() -> OpenMeteoRestClient.readForecast(coordinates));
-            Subtask<Weather> subtaskB = scope.fork(SevenTimerRestClient::readForecast);
-            Subtask<Weather> subtaskC = scope.fork(() -> MeteoNorwayRestClient.readForecast(coordinates));
+            scope.fork(() -> OpenMeteoRestClient.readForecast(coordinates));
+            scope.fork(SevenTimerRestClient::readForecast);
+            scope.fork(() -> MeteoNorwayRestClient.readForecast(coordinates));
             scope.join();
             return scope.result();
+        } catch (ExecutionException e) {
+            throw new WeatherException(e);
         }
     }
 
@@ -55,7 +57,7 @@ public record Weather(String server, String city, Integer temperature) {
         var coordinates = Geocode.getCoordinates(city);
         try (var scope = new ForecastScope()) {
             scope.fork(() -> OpenMeteoRestClient.readForecast(coordinates));
-            //scope.fork(SevenTimerRestClient::readForecast);
+            scope.fork(SevenTimerRestClient::readForecast);
             scope.fork(() -> MeteoNorwayRestClient.readForecast(coordinates));
             scope.join();
             return scope.getAverageTemperature();

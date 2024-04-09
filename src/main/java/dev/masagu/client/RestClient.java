@@ -6,7 +6,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-public sealed class RestClient permits MeteoNorwayRestClient, SevenTimerRestClient, OpenMeteoRestClient {
+public sealed class RestClient permits MeteoNorwayRestClient, SevenTimerRestClient, OpenMeteoRestClient, ForexRestClient {
 
     static String readApi(String uri) throws IOException, InterruptedException {
         HttpResponse<String> response;
