@@ -55,7 +55,7 @@ public record Weather(String server, String city, Integer temperature) {
         var coordinates = Geocode.getCoordinates(city);
         try (var scope = new ForecastScope()) {
             scope.fork(() -> OpenMeteoRestClient.readForecast(coordinates));
-            //scope.fork(SevenTimerRestClient::readForecast);
+            scope.fork(SevenTimerRestClient::readForecast);
             scope.fork(() -> MeteoNorwayRestClient.readForecast(coordinates));
             scope.join();
             return scope.getAverageTemperature();
